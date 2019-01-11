@@ -1,0 +1,17 @@
+---
+# vars file for vzell.filesystem
+
+# Which disk we are using to create a partition for a logical volume. eg (sdb or sdc)
+disk_name: sdb
+disk: "/dev/{{ disk_name }}"
+# Disk after partition. eg (/dev/sdb1 or /dev/sdc1)
+pvs_name: "{{ disk_name }}1"
+pvs: "/dev/{{ pvs_name }}"
+# Name of Volume group about to create
+vg_name: "vg_{{ disk_name }}"
+# Name of Logical Volume about to create
+lv_name: "lv_{{ disk_name }}"
+# What type of filesystem it can be ext3, ext4 or xfs etc.
+file_system: ext4
+# In what name mount point should be created.
+mount_point: /u01

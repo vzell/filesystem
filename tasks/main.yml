@@ -5,6 +5,11 @@
 #  debug:
 #    var: ansible_facts
 
+- name: Install lvm2 package
+  yum:
+    name: lvm2
+    state: present
+
 - name: "Fail if /dev/{{ pvs_name }} already exists"
   fail:
     msg: "{{ pvs }} already exists. Aborting!"

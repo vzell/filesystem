@@ -7,8 +7,12 @@
 
 - name: Install lvm2 package
   yum:
-    name: lvm2
+    name: "{{ packages }}"
     state: present
+  vars:
+    packages:
+      - lvm2
+      - e2fsprogs
 
 - name: "Fail if /dev/{{ pvs_name }} already exists"
   fail:

@@ -14,38 +14,34 @@
       - lvm2
       - e2fsprogs
 
-- name: "Fail if /dev/{{ pvs_name }} already exists"
-  fail:
-    msg: "{{ pvs }} already exists. Aborting!"
-  when: "ansible_facts['devices']['{{ disk_name }}']['partitions']['{{ pvs_name }}'] is defined"
-  tags:
-    - fdisk
-
-- name: Create Partition for "{{ mount_point }}" file system
-  shell:
-    /bin/echo -e "n\np\n1\n\n\nt\n8e\nw" | sudo fdisk "{{ disk }}" ## Create the partition on a disk
+- name: Create a new primary partition for LVM on device "{{ disk }}"
+  parted:
+    device: "{{ disk }}"
+    number: 1
+    flags:  [ lvm ]
+    state:  present
 
 - name: Create VG for "{{ vg_name }}"
   lvg:
-    vg: "{{ vg_name }}" ## Name of Volume group.
-    pvs: "{{ pvs }}" ## Physical Volume created using partition eg (/dev/sdb1 or /dev/sdc1)
-    pesize: 8
+    vg:     "{{ vg_name }}" ## Name of Volume group.
+    pvs:    "{{ pvs }}"     ## Physical Volume created using partition eg (/dev/sdb1 or /dev/sdc1)
+    pesize: "8"
 
 - name: Create LVM "{{ lv_name }}" for "{{ mount_point }}" file system.
   lvol:
-    vg: "{{ vg_name }}"
-    lv: "{{ lv_name }}" ## Name of Logical volume need to be created
-    size: 100%FREE ## All the PE's in Volume group will be used for creating the logical volume.
+    vg:   "{{ vg_name }}"
+    lv:   "{{ lv_name }}" ## Name of Logical volume need to be created
+    size: 100%VG          ## All the PE's in Volume group will be used for creating the logical volume.
 
 - name: Create the file system on newly created Logical Volume for "{{ mount_point }}".
   filesystem:
-    fstype: "{{ file_system }}" ## What type of filesystem required eg:(ext3, ext4, xfs etc.)
-    dev: "/dev/mapper/{{ vg_name }}-{{ lv_name }}" ## Full related path of device mapper to be created with creating FS.
+    fstype: "{{ file_system }}"                       ## What type of filesystem required eg:(ext3, ext4, xfs etc.)
+    dev:    "/dev/mapper/{{ vg_name }}-{{ lv_name }}" ## Full related path of device mapper to be created with creating FS.
 
 - name: Mount the created filesystem ## This is to create the FSTAB entry and mount the Filesystem.
   mount:
-    path: "{{ mount_point }}" ## Mount point where to mount the FS.
-    src: "/dev/mapper/{{ vg_name }}-{{ lv_name }}" ## Full related path of device mapper to be mounted under mount point.
-    fstype: "{{ file_system }}" ## Filesystem type
-    opts: rw,noatime ## Mount options
-    state: mounted
+    path:   "{{ mount_point }}"                       ## Mount point where to mount the FS.
+    src:    "/dev/mapper/{{ vg_name }}-{{ lv_name }}" ## Full related path of device mapper to be mounted under mount point.
+    fstype: "{{ file_system }}"                       ## Filesystem type
+    opts:   rw,noatime                                ## Mount options
+    state:  mounted
